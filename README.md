@@ -249,7 +249,7 @@ If you use this work, please cite:
   title  = {Thermodynamic Epistemic Routing: Zero-Parameter Hallucination Detection
              via Forward-Pass Energy},
   year   = {2026},
-  url    = {https://github.com/[username]/thermodynamic-epistemic-routing}
+  url    = {https://github.com/ameritusweb/thermodynamic-epistemic-routing}
 }
 ```
 
