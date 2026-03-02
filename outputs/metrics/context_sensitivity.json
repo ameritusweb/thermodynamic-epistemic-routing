@@ -1,0 +1,10 @@
+{
+  "factual_score_with_context": 0.7432398796081543,
+  "factual_score_without_context": 0.0012038479326292872,
+  "factual_context_sensitivity": -0.7420361042022705,
+  "speculative_score_with_context": 0.1530606597661972,
+  "speculative_score_without_context": 0.0019068439723923802,
+  "speculative_context_sensitivity": -0.1511538177728653,
+  "context_sensitivity_ratio": 4.909145355224609,
+  "verdict": "REAL_SIGNAL"
+}

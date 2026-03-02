@@ -1,0 +1,60 @@
+{
+  "tsne_before": {
+    "silhouette": 0.0002729131665546447,
+    "davies_bouldin": 52.884590723728124,
+    "inter_cluster_distance": 1.0701324939727783,
+    "separation_ratio": 0.04987652227282524,
+    "factual_variance": 464.33819580078125,
+    "speculative_variance": 456.35028076171875
+  },
+  "tsne_after": {
+    "silhouette": 0.039009835571050644,
+    "davies_bouldin": 6.3019964812536555,
+    "inter_cluster_distance": 8.668331146240234,
+    "separation_ratio": 0.4055517613887787,
+    "factual_variance": 430.794189453125,
+    "speculative_variance": 482.91583251953125
+  },
+  "umap_before": {
+    "silhouette": 0.0012873912928625941,
+    "davies_bouldin": 50.54364362436488,
+    "inter_cluster_distance": 0.08307556807994843,
+    "separation_ratio": 0.01171918772161007,
+    "factual_variance": 49.949668884277344,
+    "speculative_variance": 50.553932189941406
+  },
+  "umap_after": {
+    "silhouette": 0.09530136734247208,
+    "davies_bouldin": 3.9767533865753095,
+    "inter_cluster_distance": 1.0629557371139526,
+    "separation_ratio": 0.5823069214820862,
+    "factual_variance": 3.263989210128784,
+    "speculative_variance": 3.4003405570983887
+  },
+  "pca_before": {
+    "silhouette": 0.002494948683306575,
+    "davies_bouldin": 17.40475652873267,
+    "inter_cluster_distance": 2.782214403152466,
+    "separation_ratio": 0.14266327023506165,
+    "factual_variance": 380.25927734375,
+    "speculative_variance": 380.3940734863281
+  },
+  "pca_after": {
+    "silhouette": 0.22633297741413116,
+    "davies_bouldin": 1.5766514414848685,
+    "inter_cluster_distance": 31.055021286010742,
+    "separation_ratio": 1.5466679334640503,
+    "factual_variance": 325.87603759765625,
+    "speculative_variance": 480.4292907714844
+  },
+  "context_sensitivity": {
+    "factual_score_with_context": 0.7432398796081543,
+    "factual_score_without_context": 0.0012038479326292872,
+    "factual_context_sensitivity": -0.7420361042022705,
+    "speculative_score_with_context": 0.1530606597661972,
+    "speculative_score_without_context": 0.0019068439723923802,
+    "speculative_context_sensitivity": -0.1511538177728653,
+    "context_sensitivity_ratio": 4.909145355224609,
+    "verdict": "REAL_SIGNAL"
+  }
+}

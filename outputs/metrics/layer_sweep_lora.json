@@ -1,0 +1,173 @@
+{
+  "model_tag": "lora",
+  "results": [
+    {
+      "layer": 0,
+      "val_accuracy": 0.535,
+      "silhouette": 0.0006630399147979915
+    },
+    {
+      "layer": 1,
+      "val_accuracy": 0.5925,
+      "silhouette": 0.0011210552183911204
+    },
+    {
+      "layer": 2,
+      "val_accuracy": 0.65,
+      "silhouette": 0.0016504329396411777
+    },
+    {
+      "layer": 3,
+      "val_accuracy": 0.6475,
+      "silhouette": 0.0018050424987450242
+    },
+    {
+      "layer": 4,
+      "val_accuracy": 0.6475,
+      "silhouette": 0.0021323999390006065
+    },
+    {
+      "layer": 5,
+      "val_accuracy": 0.6275,
+      "silhouette": 0.002609275048598647
+    },
+    {
+      "layer": 6,
+      "val_accuracy": 0.6675,
+      "silhouette": 0.003549147630110383
+    },
+    {
+      "layer": 7,
+      "val_accuracy": 0.715,
+      "silhouette": 0.0045570870861411095
+    },
+    {
+      "layer": 8,
+      "val_accuracy": 0.74,
+      "silhouette": 0.004271028563380241
+    },
+    {
+      "layer": 9,
+      "val_accuracy": 0.755,
+      "silhouette": 0.004460110794752836
+    },
+    {
+      "layer": 10,
+      "val_accuracy": 0.76,
+      "silhouette": 0.004627843387424946
+    },
+    {
+      "layer": 11,
+      "val_accuracy": 0.76,
+      "silhouette": 0.004577064886689186
+    },
+    {
+      "layer": 12,
+      "val_accuracy": 0.795,
+      "silhouette": 0.006045166403055191
+    },
+    {
+      "layer": 13,
+      "val_accuracy": 0.835,
+      "silhouette": 0.013636911287903786
+    },
+    {
+      "layer": 14,
+      "val_accuracy": 0.8325,
+      "silhouette": 0.01764846034348011
+    },
+    {
+      "layer": 15,
+      "val_accuracy": 0.8525,
+      "silhouette": 0.027188172563910484
+    },
+    {
+      "layer": 16,
+      "val_accuracy": 0.8625,
+      "silhouette": 0.035471111536026
+    },
+    {
+      "layer": 17,
+      "val_accuracy": 0.88,
+      "silhouette": 0.05783901363611221
+    },
+    {
+      "layer": 18,
+      "val_accuracy": 0.875,
+      "silhouette": 0.06361369043588638
+    },
+    {
+      "layer": 19,
+      "val_accuracy": 0.89,
+      "silhouette": 0.06583967059850693
+    },
+    {
+      "layer": 20,
+      "val_accuracy": 0.8925,
+      "silhouette": 0.043880075216293335
+    },
+    {
+      "layer": 21,
+      "val_accuracy": 0.8675,
+      "silhouette": 0.040218137204647064
+    },
+    {
+      "layer": 22,
+      "val_accuracy": 0.87,
+      "silhouette": 0.03610480949282646
+    },
+    {
+      "layer": 23,
+      "val_accuracy": 0.86,
+      "silhouette": 0.028836462646722794
+    },
+    {
+      "layer": 24,
+      "val_accuracy": 0.855,
+      "silhouette": 0.025891732424497604
+    },
+    {
+      "layer": 25,
+      "val_accuracy": 0.865,
+      "silhouette": 0.023110341280698776
+    },
+    {
+      "layer": 26,
+      "val_accuracy": 0.8525,
+      "silhouette": 0.02021435648202896
+    },
+    {
+      "layer": 27,
+      "val_accuracy": 0.8475,
+      "silhouette": 0.018003106117248535
+    }
+  ],
+  "best_layer": 20,
+  "top5": [
+    {
+      "layer": 20,
+      "val_accuracy": 0.8925,
+      "silhouette": 0.043880075216293335
+    },
+    {
+      "layer": 19,
+      "val_accuracy": 0.89,
+      "silhouette": 0.06583967059850693
+    },
+    {
+      "layer": 17,
+      "val_accuracy": 0.88,
+      "silhouette": 0.05783901363611221
+    },
+    {
+      "layer": 18,
+      "val_accuracy": 0.875,
+      "silhouette": 0.06361369043588638
+    },
+    {
+      "layer": 22,
+      "val_accuracy": 0.87,
+      "silhouette": 0.03610480949282646
+    }
+  ]
+}

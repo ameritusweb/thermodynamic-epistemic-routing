@@ -1,0 +1,53 @@
+# API keys — never commit
+.env
+*.key
+claude-key.txt
+*api_key*
+*secret*
+
+# Model weights (host on HuggingFace)
+qwen/
+*.safetensors
+*.bin
+*.pt
+outputs/checkpoints/
+
+# Generated data (too large; see README for generation instructions)
+data/splits/
+data/processed/
+data/activations/
+data/batch/
+
+# Generated outputs
+outputs/logs/
+
+# Batch API artifacts
+msgbatch_*.jsonl
+
+# Archives
+*.zip
+*.tar.gz
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo

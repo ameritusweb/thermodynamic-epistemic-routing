@@ -1,0 +1,8 @@
+{
+  "test_accuracy": 0.8951310861423221,
+  "factual_accuracy": 0.9151036525172754,
+  "speculative_accuracy": 0.8714953271028038,
+  "threshold": 0.57,
+  "baseline_accuracy": 0.859,
+  "improvement": 0.03613108614232208
+}

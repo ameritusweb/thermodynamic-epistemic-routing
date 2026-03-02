@@ -1,0 +1,14 @@
+{
+  "n_layers": 28,
+  "n_tokens": 5,
+  "pca_dim": null,
+  "channel_dim": 32,
+  "conv_dropout": 0.0,
+  "n_params": 59233,
+  "threshold": 0.59,
+  "test_accuracy": 0.8919208132691279,
+  "factual_accuracy": 0.8795656465942744,
+  "speculative_accuracy": 0.9065420560747663,
+  "baseline_accuracy": 0.9115,
+  "improvement": -0.01957918673087211
+}

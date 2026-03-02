@@ -1,0 +1,15 @@
+{
+  "layers": [
+    17,
+    18,
+    19
+  ],
+  "n_tokens": 5,
+  "feature_dim": 4608,
+  "threshold": 0.41,
+  "test_accuracy": 0.9036918138041734,
+  "factual_accuracy": 0.9358341559723593,
+  "speculative_accuracy": 0.8656542056074766,
+  "baseline_accuracy": 0.9045,
+  "improvement": -0.0008081861958265657
+}

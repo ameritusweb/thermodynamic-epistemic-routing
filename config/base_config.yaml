@@ -1,0 +1,133 @@
+# Neural Pathway Routing PoC - Base Configuration
+
+# Experiment metadata
+experiment:
+  name: "epistemic_routing_v1"
+  seed: 42
+  output_dir: "./outputs"
+
+# Model configuration
+model:
+  name: "Qwen/Qwen2.5-1.5B-Instruct"
+  hidden_dim: 1536          # text backbone hidden size (Qwen2.5 1.5B)
+  precision: "bfloat16"     # bfloat16 or float16 or float32
+  device_map: "auto"
+  trust_remote_code: false
+
+# Dataset configuration
+data:
+  num_contexts: 10000
+  max_context_length: 1000
+  min_context_length: 200
+  max_question_length: 200
+  train_split: 0.8
+  val_split: 0.1
+  test_split: 0.1
+  batch_size_generation: 10  # For API batching
+
+# Predictor (MLP Classifier) configuration
+predictor:
+  hidden_dims: [512, 256, 128]
+  dropout: [0.3, 0.2, 0.0]
+  activation: "relu"
+  normalization: "layer_norm"
+
+  training:
+    epochs: 25
+    batch_size: 128
+    learning_rate: 0.001
+    weight_decay: 0.01
+    early_stopping_patience: 10
+    min_accuracy: 0.85  # Target accuracy
+
+# LoRA configuration
+lora:
+  r: 128
+  lora_alpha: 256
+  lora_dropout: 0.1
+  target_modules:
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+  bias: "none"
+  task_type: "CAUSAL_LM"
+
+# Training configuration
+training:
+  epochs: 6
+  batch_size: 4
+  gradient_accumulation_steps: 32
+  learning_rate: 0.0002
+  warmup_ratio: 0.1
+  lr_scheduler_type: "cosine"
+  lambda_routing: 1.0  # Weight for routing loss
+
+  # Adversarial co-evolution schedule (Phase 2)
+  routing_layer: 18                 # Which transformer layer to anchor routing/contrastive loss
+                                    # -2 = penultimate (original), 18 = blushing-zone peak
+
+  adversarial:
+    predictor_update_freq: 5        # Update predictor every N generator steps
+    predictor_lr_phase2: 0.0001     # Lower LR — predictor is warm-started from Phase 1
+    predictor_warmup_steps: 100     # Generator-only steps before predictor updates begin
+    lambda_contrastive: 1.0         # Weight for spatial centroid loss within routing loss
+    contrastive_margin: 4.0         # L2 margin between factual/speculative cluster centroids
+    predictor_grad_clip: 1.0        # Gradient clip norm for predictor optimizer
+    thermo_layers: [16, 17, 18, 19] # 4 layers → 3 deltas → 2 curvature measurements
+    lambda_thermo: 0.1              # Weight for magnitude turbulence loss
+                                    # Magnitude loss is O(||h||) ≈ 25, vs generation loss O(1).
+                                    # Use small lambda so thermo contributes ~2-3 to total loss.
+                                    # Scale: l_thermo * lambda ≈ 2.0 * 0.1 = 0.2 (balanced)
+    thermo_margin: 4.0              # Minimum required delta magnitude gap (fact - spec) per pair
+                                    # Natural gap is ~3-4; set at natural gap so loss starts near 0
+
+  optimization:
+    fp16: false
+    bf16: true
+    gradient_checkpointing: true
+    max_grad_norm: 1.0
+
+  checkpointing:
+    save_steps: 500
+    save_total_limit: 5
+    save_strategy: "steps"
+    load_best_model_at_end: true
+
+  logging:
+    logging_steps: 10
+    eval_steps: 100
+    use_wandb: false  # Set to true if you have wandb configured
+    use_tensorboard: true
+
+# Evaluation configuration
+evaluation:
+  topology:
+    methods: ["tsne", "umap", "pca"]
+    n_samples: 2000
+    tsne_perplexity: 30
+    umap_n_neighbors: 15
+    random_state: 42
+
+  metrics:
+    - "silhouette_score"
+    - "davies_bouldin_index"
+    - "separation_ratio"
+    - "inter_cluster_distance"
+
+  visualization:
+    dpi: 300
+    figsize: [10, 8]
+    style: "seaborn-v0_8-darkgrid"
+
+# API configuration (for question generation)
+api:
+  provider: "anthropic-batch"  # "anthropic" (sync) or "anthropic-batch"
+  model: "claude-haiku-4-5-20251001"
+  # model: "gpt-4-turbo-preview"  # if using OpenAI
+  max_retries: 3
+  timeout: 60
+  rate_limit_delay: 1.0  # seconds between requests
