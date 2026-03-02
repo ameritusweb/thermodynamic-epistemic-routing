@@ -1,5 +1,7 @@
 # Thermodynamic Epistemic Routing
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18841893.svg)](https://doi.org/10.5281/zenodo.18841893)
+
 **98.39% factual/speculative classification accuracy. Zero additional parameters at inference.**
 
 A training method that forces a language model to develop distinct computational dynamics for
@@ -298,12 +300,16 @@ Cost: four norm computations per forward pass. Already in the graph. Zero extra 
 
 If you use this work, please cite:
 
-```
-@misc{epistemic-routing-2026,
-  title  = {Thermodynamic Epistemic Routing: Zero-Parameter Hallucination Detection
-             via Forward-Pass Energy},
-  year   = {2026},
-  url    = {https://github.com/ameritusweb/thermodynamic-epistemic-routing}
+```bibtex
+@misc{seto2026thermodynamic,
+  title     = {Thermodynamic Epistemic Routing: Zero-Parameter Detection of
+               Factual vs. Speculative Generation in Large Language Models},
+  author    = {Seto, Scott},
+  year      = {2026},
+  month     = {March},
+  doi       = {10.5281/zenodo.18841893},
+  url       = {https://doi.org/10.5281/zenodo.18841893},
+  publisher = {Zenodo}
 }
 ```
 

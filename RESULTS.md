@@ -485,11 +485,90 @@ explained by the probe reading the wrong signal, not by any fundamental limit of
   compute cost (norm operations on already-computed tensors) but requires hook access to mid-layer
   activations
 
+### Phase 8 — Scaling to 7B (Qwen2.5-7B-Instruct, 2-GPU DDP)
+
+**Motivation**: Test whether the thermodynamic gap scales with model size. The DISCOVERY.md
+hypothesis predicted larger models would develop larger gaps due to more capacity for
+specialisation. Direct empirical test: train the identical recipe on Qwen2.5-7B-Instruct
+(4.67× more parameters) and compare final gap and threshold accuracy.
+
+**Setup changes from Phase 6**:
+- `Qwen/Qwen2.5-7B-Instruct` (hidden_dim=3584 vs 1536; same 28 layers)
+- 2 GPUs × batch_size=2 × gradient_accumulation=32 → 128 effective batch (unchanged)
+- `DistributedPairedSampler` for DDP-aware paired sharding (pairing constraint preserved)
+- `Accelerate` wrapping the identical alternating training loop
+- Config: `base_config_7b.yaml` (all thermo hyperparameters identical to Phase 6)
+
+**Training progression**:
+
+| Epoch | Avg Gen Loss | Avg Pred Loss | Eval Loss |
+|-------|-------------|---------------|-----------|
+| 1 | 2.3233 | — | — |
+| 4 | — | — | — |
+| 5 | — | — | — |
+| 6 | **1.0537** | **0.1680** | **1.0764** |
+
+Total predictor co-evolution updates: 1,927
+
+**T(x) distributions (test set, 1,869 examples)**:
+
+| Class | Mean | Std | Min | Max |
+|-------|:----:|:---:|:---:|:---:|
+| Factual | 43.96 | 3.65 | 31.24 | 55.40 |
+| Speculative | 30.08 | 2.27 | 26.69 | 47.42 |
+| **Gap** | **13.88** | — | — | — |
+
+**Best threshold (t = 35.4)**:
+- **Overall accuracy: 98.13%** — zero additional parameters
+- Factual accuracy: 98.72%
+- Speculative accuracy: 97.43%
+- FM1 (factual → speculative): 13 examples (1.3% of factual)
+- FM2 (speculative → factual): 22 examples (2.6% of speculative)
+
+**Key comparison — 1.5B vs 7B**:
+
+| Metric | 1.5B (Phase 6) | 7B (Phase 8) | Change |
+|--------|:--------------:|:------------:|:------:|
+| hidden_dim | 1536 | 3584 | +133% |
+| Best threshold | 27.2 | 35.4 | +30% |
+| Factual mean T(x) | 36.22 | 43.96 | +21% |
+| Speculative mean T(x) | 22.59 | 30.08 | +33% |
+| **Gap** | **13.62** | **13.88** | **+1.9%** |
+| **Accuracy** | **98.39%** | **98.13%** | **−0.26pp** |
+| Gen loss (epoch 6) | 1.697 | 1.054 | — |
+
+**Finding — gap does not scale with model size in the 1.5B–7B range**:
+
+The trained thermodynamic gap is essentially identical across a 4.67× increase in model size
+(13.62 vs 13.88, +1.9%). The scaling exponent implied by the data is α ≈ 0.01 (N^0.01), not
+the N^0.22 predicted prior to measurement.
+
+What does scale as expected:
+- **Absolute T(x) values** scale with hidden_dim: threshold shifts from 27.2 → 35.4 (+30%),
+  consistent with the larger residual stream norms (√(3584/1536) = 1.53× predicted; actual
+  factual norm ratio = 43.96/36.22 = 1.21×, speculative = 30.08/22.59 = 1.33×).
+- **Amplification from natural gap**: 1.5B natural gap ~3.5 → trained 13.62 (3.9× amp);
+  7B natural gap 4.695 → trained 13.88 (2.96× amp). Both converge to ~3.4–3.9× thermo_margin.
+
+**Interpretation**: The trained gap appears to be controlled by the training hyperparameters
+(thermo_margin=4.0, lambda_thermo=0.1, epochs=6), not by model capacity. Both models saturate
+at approximately 3.5× thermo_margin. The amplification budget is set by the loss objective,
+not the number of parameters. Larger gaps may require either a higher margin target or longer
+training schedules, not a larger model.
+
+This is a null result for the scaling hypothesis as originally stated, but a positive result
+for the robustness of the method: the approach transfers directly to a 4.67× larger model
+with no hyperparameter changes, producing near-identical accuracy (98.13% vs 98.39%).
+
+---
+
 **Natural follow-on experiments**:
 - Test T(x) threshold on a held-out domain (scientific papers, code, dialogue) to evaluate
   distribution shift robustness
-- Probe whether the thermodynamic gap scales with model size (3B, 7B, 70B) — the hypothesis
-  is that larger models develop larger gaps due to more capacity for specialisation
+- Test whether increasing `thermo_margin` or training epochs produces a larger gap — vs. the
+  null hypothesis that the gap saturates regardless of margin once model capacity is sufficient
+- Probe whether the gap scales at much larger sizes (70B, 405B) — the 1.5B→7B plateau may
+  reflect saturation within a model family, with re-emergence at a higher tier
 - Deploy T(x) as a live inference-time signal for AI swarm auto-feedback: flag speculative
   responses for context-grounding before downstream agents consume them
 - Evaluate whether the gap correlates with factual accuracy on open-ended generation (not just

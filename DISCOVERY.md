@@ -182,18 +182,41 @@ forced the gap to develop. Once the gap exists, you don't need the network that 
 
 ---
 
-## Why This Might Scale
+## What Actually Happened at 7B
+
+The natural next question after getting 98.39% on 1.5B: does the thermodynamic gap scale with model size?
+
+The identical training recipe was run on Qwen2.5-7B-Instruct (4.67× more parameters, same 28 layers, hidden_dim 1536→3584) using 2-GPU DDP via Accelerate. All thermo hyperparameters unchanged.
+
+**Result after 6 epochs**:
+
+| Metric | 1.5B | 7B | Change |
+|--------|:----:|:--:|:------:|
+| Gap | 13.62 | 13.88 | +1.9% |
+| Accuracy | 98.39% | 98.13% | −0.26pp |
+| Threshold | 27.2 | 35.4 | +30% |
+| Factual mean T(x) | 36.22 | 43.96 | +21% |
+| Speculative mean T(x) | 22.59 | 30.08 | +33% |
+
+The gap is essentially flat. The scaling exponent implied is N^0.01, not the N^0.22 estimated before measurement.
+
+**What this means**: The trained gap is controlled by the training hyperparameters — specifically, both models saturate at ~3.5× thermo_margin (gap ≈ 13–14 vs margin=4.0). The amplification budget is set by the loss objective, not model size. A larger gap likely requires a higher margin target or more training epochs, not more parameters.
+
+**What does scale**: The absolute T(x) values increase as expected from the larger hidden dimension. The threshold shifts +30% (27.2→35.4), approximately tracking the norm scaling. The approach transfers directly with no changes; accuracy is essentially unchanged (−0.26pp is within measurement noise on the same 1,869-example test set).
+
+**The positive result**: The method is robust across a 4.67× parameter increase. Whatever geometry the training objective shapes, it shapes consistently. The absolute threshold must be recalibrated (held-out set per deployment, as noted), but the *gap* between classes is stable.
+
+## Why This Might (or Might Not) Scale Further
 
 Standard mechanistic interpretability degrades with model size — more capacity means more feature superposition, more entangled representations, more resistance to untangling.
 
-Thermodynamic routing scales in the opposite direction. Larger models have:
-- More layers to develop distinct computational textures
-- More parameters to encode genuinely different regimes
-- More capacity to specialize without sacrificing generation quality
+Thermodynamic routing is architecturally insensitive to that problem — it reads process texture, not content geometry. But the 1.5B→7B result shows the gap is hyperparameter-bounded, not capacity-bounded, in this range.
 
-The signal is not a geometric property of a specific layer. It's a property of the entire forward pass trajectory. More depth = more signal, not less.
+Two possibilities for larger scales:
+1. **Continued plateau**: The gap remains ~14 at 70B and 405B because both models have more than sufficient capacity to satisfy any reasonable margin target in 6 epochs.
+2. **Re-emergence**: At sufficiently large scale, the model develops qualitatively richer computational specialisation that opens a larger natural gap, and trained amplification pushes it further.
 
-The hypothesis to test at scale: **gap size correlates with factual accuracy across model sizes**, and the correlation strengthens with scale.
+The hypothesis to test: **run the identical recipe with thermo_margin=8.0 on both 1.5B and 7B**. If both converge to ~3.5×8.0=28 units, the gap is confirmed to be margin-controlled, not capacity-controlled. If the 7B reaches 28 and the 1.5B saturates below it, the larger model has more room to specialise.
 
 ---
 
@@ -206,6 +229,8 @@ The hypothesis to test at scale: **gap size correlates with factual accuracy acr
 | Delta curvature | `cos(delta_n, delta_{n+1})` | Clean | No consistent direction | No signal |
 | **Delta magnitude** | `\|\|h_{n+1} - h_n\|\|` | Unit vector, never vanishes | **Yes** | **Works** |
 
+**1.5B training progression**:
+
 | Metric | Baseline | Epoch 1 | Epoch 2 | Epoch 3 | Epoch 4 (early) | Epoch 6 (final) |
 |---|---|---|---|---|---|---|
 | Factual magnitude | ~26 | ~27 | ~30 | ~32 | ~35 | **36.22** |
@@ -214,3 +239,14 @@ The hypothesis to test at scale: **gap size correlates with factual accuracy acr
 | Eval LM loss | — | 1.914 | — | 1.842 | — | **1.835** |
 | `loss_thermo` | — | 1.0–2.5 | 0–0.5 | ~0 | ~0 | **~0** |
 | Threshold accuracy | — | — | — | — | — | **98.39%** |
+
+**7B result (identical hyperparameters, 2-GPU DDP)**:
+
+| Metric | 1.5B epoch 6 | 7B epoch 6 | Δ |
+|---|---|---|---|
+| Factual magnitude | 36.22 | **43.96** | +21% |
+| Speculative magnitude | 22.59 | **30.08** | +33% |
+| Gap | 13.62 | **13.88** | +1.9% |
+| Eval LM loss | 1.835 | **1.076** | — |
+| Threshold | 27.2 | **35.4** | +30% |
+| Threshold accuracy | 98.39% | **98.13%** | −0.26pp |

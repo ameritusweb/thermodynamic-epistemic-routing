@@ -12,6 +12,7 @@ Usage:
     python eval_thermo_threshold.py
 """
 
+import argparse
 import json
 import logging
 import torch
@@ -29,6 +30,17 @@ from src.data.dataset_builder import load_dataset_from_file
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 
+# ── Args ──────────────────────────────────────────────────────────────────────
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--config', default='config/base_config.yaml',
+                    help='Path to YAML config (default: base_config.yaml for 1.5B)')
+parser.add_argument('--sweep_lo', type=float, default=None,
+                    help='Lower bound of threshold sweep (auto-detected if not set)')
+parser.add_argument('--sweep_hi', type=float, default=None,
+                    help='Upper bound of threshold sweep (auto-detected if not set)')
+args = parser.parse_args()
+
 # ── Config ────────────────────────────────────────────────────────────────────
 
 LORA_CKPT    = 'outputs/checkpoints/lora_final'
@@ -37,8 +49,6 @@ OUT_JSON     = 'outputs/metrics/thermo_threshold_eval.json'
 OUT_PLOT     = 'outputs/visualizations/thermo_threshold_eval.png'
 MAX_LENGTH   = 512
 BATCH_SIZE   = 8
-SWEEP_LO     = 20.0
-SWEEP_HI     = 40.0
 SWEEP_STEPS  = 201   # 0.1-unit increments
 
 
@@ -121,7 +131,7 @@ def closest(rows, t):
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
-    config      = yaml.safe_load(open('config/base_config.yaml'))
+    config      = yaml.safe_load(open(args.config))
     thermo_layers = config['training']['adversarial']['thermo_layers']
     model_name  = config['model']['name']
     device      = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -189,9 +199,17 @@ def main():
                  f"min={spec_scores.min():.2f}  max={spec_scores.max():.2f}")
     logging.info(f"Mean gap: {fact_scores.mean() - spec_scores.mean():.2f}")
 
+    # Auto-detect sweep range from data if not specified
+    all_min = scores.min()
+    all_max = scores.max()
+    margin  = (all_max - all_min) * 0.1
+    sweep_lo = args.sweep_lo if args.sweep_lo is not None else max(0.0, all_min - margin)
+    sweep_hi = args.sweep_hi if args.sweep_hi is not None else all_max + margin
+    logging.info(f"Sweep range: {sweep_lo:.1f} → {sweep_hi:.1f}")
+
     # Sweep
-    logging.info(f"Sweeping threshold {SWEEP_LO} → {SWEEP_HI} ({SWEEP_STEPS} steps)...")
-    rows = sweep_threshold(scores, labels, SWEEP_LO, SWEEP_HI, SWEEP_STEPS)
+    logging.info(f"Sweeping threshold {sweep_lo} → {sweep_hi} ({SWEEP_STEPS} steps)...")
+    rows = sweep_threshold(scores, labels, sweep_lo, sweep_hi, SWEEP_STEPS)
 
     # Best threshold by accuracy
     best = max(rows, key=lambda r: r['overall_acc'])
@@ -204,7 +222,7 @@ def main():
     print(f"  {'Threshold':>9}  {'Overall':>7}  {'Factual':>7}  {'Spec':>7}  {'FM1':>5}  {'FM2':>5}")
     print(f"  {'-'*9}  {'-'*7}  {'-'*7}  {'-'*7}  {'-'*5}  {'-'*5}")
 
-    display_thresholds = np.arange(SWEEP_LO, SWEEP_HI + 0.01, 1.0)
+    display_thresholds = np.arange(sweep_lo, sweep_hi + 0.01, 1.0)
     for t in display_thresholds:
         r = closest(rows, t)
         marker = '  ← best' if r['threshold'] == best['threshold'] else ''
@@ -252,7 +270,7 @@ def main():
 
     # Right: score distributions
     ax2 = axes[1]
-    bins = np.linspace(SWEEP_LO, SWEEP_HI, 60)
+    bins = np.linspace(sweep_lo, sweep_hi, 60)
     ax2.hist(fact_scores, bins=bins, alpha=0.6, color='seagreen',
              label=f'Factual  (μ={fact_scores.mean():.1f})', density=True)
     ax2.hist(spec_scores, bins=bins, alpha=0.6, color='tomato',
