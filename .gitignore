@@ -13,7 +13,6 @@ qwen/
 outputs/checkpoints/
 
 # Generated data (too large; see README for generation instructions)
-data/splits/
 data/processed/
 data/activations/
 data/batch/
