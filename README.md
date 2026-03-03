@@ -425,6 +425,192 @@ Cost: four norm computations per forward pass. Already in the graph. Zero extra 
 
 ---
 
+## Future Applications
+
+### Code Assistants: The Ideal Domain
+
+Code may be the single best domain for thermodynamic routing because **ground truth is literally in the context window**. When Claude Code or GitHub Copilot generates code, the actual source files are available for verification—you just need to know *when* to verify.
+
+#### The Current Problem
+
+**Claude Code today:**
+- Makes confident claims about code it hasn't actually read
+- Users don't know when to trust vs. manually verify
+- Over-reads files "just to be safe" (wastes tokens, slow)
+- Sometimes assumes APIs, function signatures, or module structures that don't exist
+
+**Example failure mode:**
+```python
+# Claude: "The parse_config() function takes 3 parameters: path, format, and validate"
+# Reality: It takes 2 parameters. The assumption just introduced a bug.
+```
+
+**The assumption paradox in code:**
+- "Function X is defined in module Y" ← Did Claude read Y or assume based on naming patterns?
+- "This follows the repository's standard error handling" ← Retrieved from actual code or inferred?
+- "Import from utils.auth" ← Does that module exist or is it a plausible guess?
+
+#### What Thermodynamic Routing Enables
+
+**Real-time epistemic awareness:**
+
+```python
+# Internal monitoring during code generation
+while generating_code():
+    T = compute_delta_magnitude(layers_16_19)
+
+    if T < threshold:
+        # ⚠️ ASSUMING mode detected
+        action = auto_verify_or_flag()
+        # Option 1: Automatically read relevant files
+        # Option 2: Mark output with assumption warning
+        # Option 3: Prompt user: "Should I read X.py first?"
+    else:
+        # ✓ FACTUAL mode - working from actual codebase
+        proceed_with_confidence()
+```
+
+**User experience improvements:**
+
+1. **Visual confidence indicators:**
+   - 🟢 Green: "Retrieved from actual code files"
+   - 🟡 Yellow: "Making inference - consider verifying"
+   - Code suggestions tagged with epistemic state in real-time
+
+2. **Selective file reading (intelligent RAG):**
+   - Only read files when T(x) drops below threshold
+   - Reduces token waste by 60-80% compared to "read everything"
+   - Faster responses while maintaining accuracy
+
+3. **Safer refactoring:**
+   ```
+   User: "Refactor the authentication system"
+
+   Claude: [T(x) = 18.3, below threshold]
+          "I need to read the auth files first. Reading..."
+          [Reads auth.py, middleware.py, session.py]
+          [T(x) = 34.7, above threshold]
+          "Based on the actual code, here's the refactor..."
+   ```
+
+4. **Assumption flagging in output:**
+   ```python
+   # Claude marks assumptions inline:
+   def process_data(input):
+       # ✓ VERIFIED: parse_config defined in utils.py:142
+       config = utils.parse_config(input)
+
+       # ⚠️ ASSUMPTION: Inferred from naming patterns, not verified
+       # Consider reading validator.py to confirm
+       result = validator.check_schema(config)
+   ```
+
+#### Why Code is the Perfect Test Case
+
+| Property | Code Domain | General Text |
+|----------|-------------|--------------|
+| **Ground truth location** | In context window (actual files) | Often external (web, not in context) |
+| **Verification cost** | Free (read files already available) | Expensive (API calls, searches) |
+| **Factual/speculative boundary** | Crystal clear (in codebase or not) | Fuzzy (opinion vs. fact) |
+| **Failure cost** | High (bugs, broken code) | Varies |
+| **User expertise** | Can verify (they wrote the code) | Often can't verify |
+
+#### Scaling to Frontier Models (405B+)
+
+The research shows the thermodynamic gap is **training-controlled, not capacity-limited**:
+- 1.5B → 7B: Gap flat at ~13.6 units (both saturated at 3.5× training margin)
+- Accuracy essentially unchanged: 98.39% → 98.13%
+
+**Implications for Claude Opus 4.6 (likely ~405B scale):**
+
+**Scenario 1 - Continued plateau:**
+Gap remains ~14 units (sufficient capacity at all scales). Method still works, just needs threshold recalibration per model. Already deployable.
+
+**Scenario 2 - Natural amplification:**
+Larger models develop richer computational specialization, gap widens naturally (18-25+ units). Detection becomes *easier* at frontier scale, not harder.
+
+**Either way:** The method should transfer directly. The key unknown is whether larger models need the same training pressure or develop stronger signals naturally.
+
+#### Production Deployment Path
+
+**Phase 1 - Training (if needed):**
+- Apply thermodynamic LoRA training to Claude Opus/Sonnet
+- Use code-specific dataset: factual = answer in codebase, speculative = architectural inference
+- 6 epochs, same hyperparameters as 1.5B/7B runs
+
+**Phase 2 - Calibration:**
+- Threshold sweep on held-out code repositories
+- Calibrate per model size (threshold shifts with hidden_dim, gap stays constant)
+- Set based on acceptable FM2 rate (false negatives)
+
+**Phase 3 - Integration:**
+- Hook extraction at layers 16-19 (or equivalent mid-network for different architectures)
+- Compute T(x) in parallel with generation (negligible overhead)
+- Trigger reads when T(x) < threshold
+
+**Phase 4 - User control:**
+- Settings: "Auto-verify", "Flag only", "Confidence always visible"
+- Threshold tuning: Conservative (fewer assumptions) vs. Aggressive (faster, more trust)
+
+### Other High-Value Domains
+
+**Medical AI:**
+- Factual: "This drug interaction is documented in UpToDate" (in context)
+- Speculative: "This combination is probably safe based on mechanism" (inference)
+- Use case: Flag speculative medical claims for mandatory human review
+
+**Legal AI:**
+- Factual: "Precedent Smith v. Jones states X" (case law in context)
+- Speculative: "This likely violates statute Y" (legal reasoning)
+- Use case: Distinguish cited law from legal argument
+
+**Scientific Literature Review:**
+- Factual: "Paper X reports result Y" (paper in context)
+- Speculative: "This suggests mechanism Z" (hypothesis generation)
+- Use case: Separate literature retrieval from scientific inference
+
+**Customer Support:**
+- Factual: "According to our documentation, feature X works like Y" (docs in context)
+- Speculative: "You might try workaround Z" (educated guess)
+- Use case: Flag assumptions for escalation to human support
+
+**Multi-Agent Systems:**
+- Detect when Agent A passes speculative output to Agent B as if it were factual
+- Break assumption chains before they compound
+- Auto-trigger grounding feedback when agents enter speculative mode
+- Original motivation for this research
+
+### Open Research Questions
+
+1. **Does the gap scale with model size beyond 7B?**
+   - Test on 70B, 405B models
+   - Does natural gap widen or stay constant?
+   - Does training margin need adjustment?
+
+2. **Does the signal transfer zero-shot to untrained models?**
+   - Is there a detectable (albeit smaller) natural gap in base models?
+   - Could this work without thermodynamic LoRA training?
+
+3. **Does T(x) correlate with factual accuracy on open-ended generation?**
+   - Beyond binary classification, does higher T(x) predict more reliable outputs?
+   - Could this enable real-time quality scoring?
+
+4. **Cross-domain generalization:**
+   - Train on Wikipedia, test on code - does it transfer?
+   - Is the thermodynamic signal domain-agnostic?
+
+5. **Optimal layer selection for different architectures:**
+   - 28-layer Qwen: layers 16-19 optimal
+   - What about 80-layer models? 100-layer models?
+   - Is "middle of network" a universal rule?
+
+6. **Combining with Curved Inference:**
+   - Manson (2025) measures curvature (second-order geometry)
+   - We measure magnitude (first-order geometry)
+   - Do they provide independent signal? Combined accuracy?
+
+---
+
 ## Citation
 
 If you use this work, please cite:
