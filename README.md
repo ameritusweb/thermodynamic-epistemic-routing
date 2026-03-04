@@ -1,6 +1,6 @@
 # Thermodynamic Epistemic Routing
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18841893.svg)](https://doi.org/10.5281/zenodo.18841892)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18841892.svg)](https://doi.org/10.5281/zenodo.18841892)
 
 **98.39% factual/speculative classification accuracy. Zero additional parameters at inference.**
 
