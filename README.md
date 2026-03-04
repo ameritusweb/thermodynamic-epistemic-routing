@@ -634,8 +634,8 @@ If you use this work, please cite:
   author    = {Seto, Scott},
   year      = {2026},
   month     = {March},
-  doi       = {10.5281/zenodo.18841893},
-  url       = {https://doi.org/10.5281/zenodo.18841893},
+  doi       = {10.5281/zenodo.18841892},
+  url       = {https://doi.org/10.5281/zenodo.18841892},
   publisher = {Zenodo}
 }
 ```
