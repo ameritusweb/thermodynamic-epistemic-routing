@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18841892.svg)](https://doi.org/10.5281/zenodo.18841892)
 
-**98.39% factual/speculative classification accuracy. Zero additional parameters at inference.**
+**98.39% accuracy (AUC 0.9786-0.9948). Zero additional parameters at inference. +5.86-7.48pp AUC improvement over prior methods.**
 
 A training method that forces a language model to develop distinct computational dynamics for
 factual retrieval vs. speculative generation — then reads that signal directly from the
@@ -19,7 +19,7 @@ This project asks: *how hard did the model work to get there?*
 Factual retrieval leaves a high-energy signature in the model's hidden state trajectory.
 Speculative generation is smooth — the model glides. After training with a thermodynamic
 loss, the gap between these two regimes is 13.62 units. A single threshold classifies them
-at 98.39% accuracy with no additional parameters.
+at 98.39% accuracy (AUC 0.9786) with no additional parameters.
 
 ```
 T(x) = mean(||h_{n+1} − h_n||)   for layers 16–19, at last token
@@ -95,7 +95,7 @@ else:
     trigger_verification()  # RAG, human review, etc.
 ```
 
-**Accuracy: 98.39%** at detecting when the model is assuming.
+**Accuracy: 98.39% (AUC 0.9786 at 1.5B, 0.9948 at 7B)** at detecting when the model is assuming.
 **Cost: Zero parameters.** Four norm calculations on already-computed hidden states.
 **Latency: Negligible.** No extra forward passes required.
 
@@ -119,17 +119,17 @@ For a 50-agent system generating 500 tokens each, that's ~67 missed assumptions 
 
 **Qwen2.5-1.5B Results:**
 
-| Method | Accuracy | Factual | Speculative | FM2 | Params |
-|--------|:--------:|:-------:|:-----------:|:---:|:------:|
-| Baseline MLP (frozen model) | 85.9% | ~85% | ~87% | — | 953K |
-| Best spatial MLP (post-LoRA) | 91.15% | 93.7% | 88.6% | — | 953K |
-| **T(x) threshold (zero-param)** | **98.39%** | **99.31%** | **97.31%** | **2.7%** | **0** |
+| Method | Accuracy | AUC | Factual | Speculative | FM2 | Params |
+|--------|:--------:|:---:|:-------:|:-----------:|:---:|:------:|
+| Baseline MLP (frozen model) | 85.9% | — | ~85% | ~87% | — | 953K |
+| Best spatial MLP (post-LoRA) | 91.15% | — | 93.7% | 88.6% | — | 953K |
+| **T(x) threshold (zero-param)** | **98.39%** | **0.9786** | **99.31%** | **97.31%** | **2.7%** | **0** |
 
 **Qwen2.5-7B Replication (identical hyperparameters, 2-GPU DDP):**
 
-| Method | Accuracy | Factual | Speculative | FM2 | Gap | Threshold |
-|--------|:--------:|:-------:|:-----------:|:---:|:---:|:---------:|
-| **T(x) threshold (zero-param)** | **98.13%** | **98.72%** | **97.43%** | **2.6%** | **13.88** | **35.4** |
+| Method | Accuracy | AUC | Factual | Speculative | FM2 | Gap | Threshold |
+|--------|:--------:|:---:|:-------:|:-----------:|:---:|:---:|:---------:|
+| **T(x) threshold (zero-param)** | **98.13%** | **0.9948** | **98.72%** | **97.43%** | **2.6%** | **13.88** | **35.4** |
 
 **Scaling behavior (1.5B → 7B):**
 - Gap: 13.62 → 13.88 (+1.9%) — essentially flat across 4.67× parameter increase
@@ -144,6 +144,18 @@ FM2 = speculative responses misclassified as factual (the dangerous failure mode
 
 Full experimental record: [RESULTS.md](RESULTS.md)
 Research narrative: [DISCOVERY.md](DISCOVERY.md)
+
+### Comparison with Prior Methods
+
+| Method | AUC | Approach | Parameters |
+|--------|:---:|----------|:----------:|
+| Perplexity | 0.68 | Next-token probability | 0 |
+| Semantic Entropy | 0.87 | Multi-sample agreement | 0 |
+| Topological Entropy (Pirolo 2025) | 0.92 | Attention graph PageRank | 0 |
+| **T(x) Threshold (1.5B, ours)** | **0.9786** | **Temporal dynamics** | **0** |
+| **T(x) Threshold (7B, ours)** | **0.9948** | **Temporal dynamics** | **0** |
+
+**Key insight:** Spatial methods (attention topology, embedding geometry) hit a ceiling around 0.92 AUC. Temporal dynamics (measuring computational work across layers) achieve near-perfect separation at 0.9948 AUC.
 
 ---
 
@@ -393,7 +405,7 @@ Current production systems have two options:
 1. **Trust blindly** (dangerous)
 2. **Expensive verification** (semantic entropy, multiple samples, external fact-checking)
 
-Thermodynamic routing is option 3: **zero-parameter real-time confidence detection**. Four norm calculations. No latency. 98.39% accuracy.
+Thermodynamic routing is option 3: **zero-parameter real-time confidence detection**. Four norm calculations. No latency. 98.39% accuracy (AUC 0.9786-0.9948).
 
 ### For Deployment
 - **RAG triggers:** Retrieve only when delta magnitude is low (selective, cost-effective)
